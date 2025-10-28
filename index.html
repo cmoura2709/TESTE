@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -139,3 +140,83 @@
     const fromInputDate = (s) => {
       const [y, m, d] = s.split('-').map(Number);
       return new Date(y, m - 1, d);
+    };
+
+    const parseDataBR = (s) => {
+      const [d, m, y] = s.split('/').map(Number);
+      return new Date(y, m - 1, d);
+    };
+
+    const sameYMD = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+
+    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const addDays = (d, n) => {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() + n);
+      return x;
+    };
+
+    const ehDiaUtil = (data) => {
+      const d = stripTime(data);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) return false;
+      return !feriados.some(f => sameYMD(f, d));
+    };
+
+    const proximoDiaUtil = (data) => {
+      let d = addDays(data, 1);
+      while (!ehDiaUtil(d)) d = addDays(d, 1);
+      return d;
+    };
+
+    fetch('https://raw.githubusercontent.com/cmoura2709/Data-da-Ocorrencia/main/Feriados.json')
+      .then(r => r.json())
+      .then(arr => { feriados = arr.map(parseDataBR); })
+      .catch(err => {
+        console.error('Erro ao carregar Feriados.json:', err);
+        alert('Erro ao carregar feriados. Verifique a conexão ou o link do arquivo.');
+      });
+
+    function calcular() {
+      const notificacaoVal = document.getElementById('notificacao').value;
+      const prazo = parseInt(document.getElementById('prazo').value, 10);
+      const out = document.getElementById('resultado');
+
+      if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
+        out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
+        out.style.opacity = 1;
+        return;
+      }
+
+      if (feriados.length === 0) {
+        out.innerHTML = `<span style="color:red;">Feriados ainda não carregados. Aguarde alguns segundos e tente novamente.</span>`;
+        out.style.opacity = 1;
+        return;
+      }
+
+      const dataNotificacao = fromInputDate(notificacaoVal);
+      const inicioContagem = proximoDiaUtil(dataNotificacao);
+
+      let dataFinal = addDays(inicioContagem, prazo - 1);
+      if (!ehDiaUtil(dataFinal)) {
+        dataFinal = proximoDiaUtil(dataFinal);
+      }
+
+      const dataOcorrencia = addDays(dataFinal, 1);
+
+      out.innerHTML = `
+        <strong>Data de Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
+        <strong>Data Final para Apresentação da Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
+        <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
+      `;
+      out.style.animation = "none";
+      void out.offsetWidth;
+      out.style.animation = "slideUp 0.4s ease forwards";
+    }
+  </script>
+</body>
+</html>
