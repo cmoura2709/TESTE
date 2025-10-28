@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -84,14 +85,9 @@
       transition: background-color 0.2s ease-in-out, transform 0.1s;
     }
 
-    button:hover:enabled {
+    button:hover {
       background-color: #3a78c2;
       transform: scale(1.02);
-    }
-
-    button:disabled {
-      background-color: #9bbce6;
-      cursor: not-allowed;
     }
 
     #resultado {
@@ -115,115 +111,3 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes slideUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>Data da Ocorrência</h1>
-    <h2>(Recusa de Informações)</h2>
-
-    <label for="notificacao">Data da Notificação:</label>
-    <input type="date" id="notificacao">
-
-    <label for="prazo">Prazo (em dias):</label>
-    <input type="number" id="prazo" min="1">
-
-    <button id="btnCalcular" onclick="calcular()" disabled>Calcular</button>
-
-    <div id="resultado"></div>
-  </div>
-
-  <script>
-    let feriados = [];
-
-    const fromInputDate = (s) => {
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    };
-
-    const parseDataBR = (s) => {
-      const [d, m, y] = s.split('/').map(Number);
-      return new Date(y, m - 1, d);
-    };
-
-    const sameYMD = (a, b) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-
-    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-    const addDays = (d, n) => {
-      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      x.setDate(x.getDate() + n);
-      return x;
-    };
-
-    const ehDiaUtil = (data) => {
-      const d = stripTime(data);
-      const dow = d.getDay();
-      if (dow === 0 || dow === 6) return false;
-      return !feriados.some(f => sameYMD(f, d));
-    };
-
-    const proximoDiaUtil = (data) => {
-      let d = addDays(data, 1);
-      while (!ehDiaUtil(d)) d = addDays(d, 1);
-      return d;
-    };
-
-    // ✅ Carrega os feriados antes de habilitar o botão
-    fetch('Feriados.json')
-      .then(r => r.json())
-      .then(arr => {
-        feriados = arr.map(parseDataBR);
-        document.getElementById('btnCalcular').disabled = false;
-      })
-      .catch(err => {
-        console.error('Erro ao carregar Feriados.json:', err);
-        alert('Não foi possível carregar os feriados. Verifique o arquivo Feriados.json.');
-      });
-
-    function calcular() {
-      if (feriados.length === 0) {
-        alert("Os feriados ainda estão sendo carregados. Aguarde um momento e tente novamente.");
-        return;
-      }
-
-      const notificacaoVal = document.getElementById('notificacao').value;
-      const prazo = parseInt(document.getElementById('prazo').value, 10);
-      const out = document.getElementById('resultado');
-
-      if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
-        out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
-        out.style.opacity = 1;
-        return;
-      }
-
-      const dataNotificacao = fromInputDate(notificacaoVal);
-      const inicioContagem = proximoDiaUtil(dataNotificacao);
-
-      let dataFinal = addDays(inicioContagem, prazo - 1);
-      if (!ehDiaUtil(dataFinal)) {
-        dataFinal = proximoDiaUtil(dataFinal);
-      }
-
-      const dataOcorrencia = addDays(dataFinal, 1);
-
-      out.innerHTML = `
-        <strong>Data de Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
-        <strong>Data Final para Apresentação da Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
-        <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
-      `;
-      out.style.animation = "none";
-      void out.offsetWidth;
-      out.style.animation = "slideUp 0.4s ease forwards";
-    }
-  </script>
-</body>
-</html>
