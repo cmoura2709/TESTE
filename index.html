@@ -3,22 +3,16 @@
   <meta charset="UTF-8">
   <title>Data da Ocorrência</title>
   <style>
-    /* Fonte moderna */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
     body {
       font-family: 'Inter', sans-serif;
-
-      /* Fundo com imagem do repositório */
-      background-image: url('Fundo_ANAC.jpg'); /* ou .jpg se for esse formato */
-      background-size: contain;        /* cobre toda a tela */
-      background-position: center;   /* centraliza */
-      background-repeat: no-repeat;  /* não repete */
-
-      /* Mantendo gradiente se quiser efeito de overlay */
+      background-image: url('Fundo_ANAC.jpg');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
       background-blend-mode: overlay;
-      background-color: rgba(26, 79, 139, 0.6); /* azul semitransparente sobre a imagem */
-
+      background-color: rgba(26, 79, 139, 0.6);
       margin: 0;
       padding: 0;
       display: flex;
@@ -28,7 +22,7 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.95); /* leve transparência para ver o fundo */
+      background: rgba(255, 255, 255, 0.95);
       max-width: 450px;
       width: 100%;
       padding: 25px;
@@ -113,7 +107,6 @@
       color: #4a90e2;
     }
 
-    /* Animações */
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
@@ -148,11 +141,6 @@
       return new Date(y, m - 1, d);
     };
 
-    const parseDataBR = (s) => {
-      const [d, m, y] = s.split('/').map(Number);
-      return new Date(y, m - 1, d);
-    };
-
     const sameYMD = (a, b) =>
       a.getFullYear() === b.getFullYear() &&
       a.getMonth() === b.getMonth() &&
@@ -179,22 +167,16 @@
       return d;
     };
 
+    // Carrega os feriados (formato dd/mm/yyyy)
     fetch('Feriados.json')
       .then(r => r.json())
-      ..then(arr => {
-  feriados = arr.map(s => {
-    // Detecta automaticamente o formato
-    if (s.includes('/')) {
-      const [d, m, y] = s.split('/').map(Number);
-      return new Date(y, m - 1, d);
-    } else if (s.includes('-')) {
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    } else {
-      return new Date(s);
-    }
-  });
-})
+      .then(arr => {
+        feriados = arr.map(s => {
+          const [d, m, y] = s.split('/').map(Number);
+          return new Date(y, m - 1, d);
+        });
+        console.log('Feriados carregados:', feriados.map(f => f.toLocaleDateString('pt-BR')));
+      })
       .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
     function calcular() {
@@ -209,12 +191,23 @@
       }
 
       const dataNotificacao = fromInputDate(notificacaoVal);
-      const inicioContagem = proximoDiaUtil(dataNotificacao);
+      const notificacaoEhUtil = ehDiaUtil(dataNotificacao);
 
-      let dataFinal = addDays(inicioContagem, prazo - 1);
-      if (!ehDiaUtil(dataFinal)) {
-        dataFinal = proximoDiaUtil(dataFinal);
+      // Regra: se notificação for em feriado/fds, inicia no segundo dia útil
+      let inicioContagem = notificacaoEhUtil
+        ? proximoDiaUtil(dataNotificacao)
+        : proximoDiaUtil(proximoDiaUtil(dataNotificacao));
+
+      // Conta dia a dia apenas dias úteis
+      let diasContados = 0;
+      let dataAtual = new Date(inicioContagem);
+      while (diasContados < prazo) {
+        if (ehDiaUtil(dataAtual)) diasContados++;
+        if (diasContados < prazo) dataAtual.setDate(dataAtual.getDate() + 1);
       }
+
+      let dataFinal = stripTime(dataAtual);
+      if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
 
       const dataOcorrencia = addDays(dataFinal, 1);
 
@@ -223,8 +216,8 @@
         <strong>Data Final para Apresentação da Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
         <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
       `;
-      out.style.animation = "none"; // reset animação
-      void out.offsetWidth; // reflow para reiniciar
+      out.style.animation = "none";
+      void out.offsetWidth;
       out.style.animation = "slideUp 0.4s ease forwards";
     }
   </script>
