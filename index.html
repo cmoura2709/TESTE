@@ -3,7 +3,125 @@
   <meta charset="UTF-8">
   <title>Data da Ocorrência</title>
   <style>
-    /* ... (mantém todo o CSS original) ... */
+    /* Fonte moderna */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+
+      /* Fundo com imagem do repositório */
+      background-image: url('Fundo_ANAC.jpg'); /* ou .jpg se for esse formato */
+      background-size: contain;        /* cobre toda a tela */
+      background-position: center;   /* centraliza */
+      background-repeat: no-repeat;  /* não repete */
+
+      /* Mantendo gradiente se quiser efeito de overlay */
+      background-blend-mode: overlay;
+      background-color: rgba(26, 79, 139, 0.6); /* azul semitransparente sobre a imagem */
+
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95); /* leve transparência para ver o fundo */
+      max-width: 450px;
+      width: 100%;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    h1 {
+      font-size: 26px;
+      text-align: center;
+      margin: 0 0 10px 0;
+      color: #1a1a1a;
+    }
+
+    h2 {
+      font-size: 16px;
+      text-align: center;
+      margin: 0 0 20px 0;
+      font-weight: normal;
+      color: #1a1a1a;
+    }
+
+    label {
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    input:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background-color 0.2s ease-in-out, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: #3a78c2;
+      transform: scale(1.02);
+    }
+
+    #resultado {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8faff;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #1a1a1a;
+      border: 1px solid #d6e0ff;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: slideUp 0.4s ease forwards;
+    }
+
+    strong {
+      color: #4a90e2;
+    }
+
+    /* Animações */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -23,14 +141,22 @@
   </div>
 
   <script>
+    /* =========================
+       Lógica de datas e feriados
+       (substitui somente o script,
+       sem mexer em layout)
+       ========================= */
+
     let feriados = [];
 
-    const fromInputDate = s => {
+    // converte "yyyy-mm-dd" (input date) para Date (sem hora)
+    const fromInputDate = (s) => {
       const [y, m, d] = s.split('-').map(Number);
       return new Date(y, m - 1, d);
     };
 
-    const parseDataBR = s => {
+    // converte "dd/mm/yyyy" para Date (usado no Feriados.json)
+    const parseDataBR = (s) => {
       const [d, m, y] = s.split('/').map(Number);
       return new Date(y, m - 1, d);
     };
@@ -40,7 +166,7 @@
       a.getMonth() === b.getMonth() &&
       a.getDate() === b.getDate();
 
-    const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     const addDays = (d, n) => {
       const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -48,22 +174,33 @@
       return x;
     };
 
-    const ehDiaUtil = data => {
-      const d = stripTime(data);
+    const isWeekend = (d) => {
       const dow = d.getDay();
-      if (dow === 0 || dow === 6) return false;
+      return dow === 0 || dow === 6;
+    };
+
+    const ehDiaUtil = (data) => {
+      const d = stripTime(data);
+      if (isWeekend(d)) return false;
       return !feriados.some(f => sameYMD(f, d));
     };
 
-    const proximoDiaUtil = data => {
+    // Retorna o próximo dia útil a partir de 'data' inclusive.
+    // Ou seja, se 'data' já for útil, retorna 'data' (não avança 1 a mais).
+    const proximoDiaUtilInclusivo = (data) => {
       let d = stripTime(data);
-      while (!ehDiaUtil(d)) d = addDays(d, 1);
+      while (!ehDiaUtil(d)) {
+        d = addDays(d, 1);
+      }
       return d;
     };
 
+    // Carrega feriados (arquivo JSON com ["01/01/2025", ...])
     fetch('Feriados.json')
       .then(r => r.json())
-      .then(arr => { feriados = arr.map(parseDataBR); })
+      .then(arr => {
+        feriados = arr.map(parseDataBR);
+      })
       .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
     function calcular() {
@@ -77,20 +214,23 @@
         return;
       }
 
-      // 🔹 Ajusta notificação para próximo dia útil, se necessário
+      // 1) Ajusta notificação: se cair em fim de semana/feriado, considerar próximo dia útil
       let dataNotificacao = fromInputDate(notificacaoVal);
-      if (!ehDiaUtil(dataNotificacao)) dataNotificacao = proximoDiaUtil(dataNotificacao);
+      dataNotificacao = proximoDiaUtilInclusivo(dataNotificacao);
 
-      // 🔹 Início da contagem = dia seguinte à notificação efetiva (mesmo que não seja útil)
+      // 2) Início da contagem = dia subsequente à notificação efetiva (pode ser fim de semana)
       const inicioContagem = addDays(dataNotificacao, 1);
 
-      // 🔹 Prazo em dias corridos (incluindo o primeiro dia)
+      // 3) Prazo contado em dias corridos — o primeiro dia é o 'inicioContagem'.
+      // Então a data final é inicioContagem + (prazo - 1)
       let dataFinal = addDays(inicioContagem, prazo - 1);
 
-      // 🔹 Ajusta dataFinal se cair em feriado/fds
-      if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
+      // 4) Se dataFinal cair em fim de semana ou feriado → ajustar para próximo dia útil
+      if (!ehDiaUtil(dataFinal)) {
+        dataFinal = proximoDiaUtilInclusivo(dataFinal);
+      }
 
-      // 🔹 Data da ocorrência = dataFinal + 1 dia (sem ajuste)
+      // 5) Data da ocorrência = dataFinal + 1 dia (sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
       out.innerHTML = `
@@ -100,8 +240,9 @@
         <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
       `;
 
-      out.style.animation = "none"; // reset animação
-      void out.offsetWidth; // reflow
+      // reinicia animação do resultado (igual ao original)
+      out.style.animation = "none";
+      void out.offsetWidth;
       out.style.animation = "slideUp 0.4s ease forwards";
     }
   </script>
