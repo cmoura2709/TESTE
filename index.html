@@ -181,7 +181,20 @@
 
     fetch('Feriados.json')
       .then(r => r.json())
-      .then(arr => { feriados = arr.map(parseDataBR); })
+      ..then(arr => {
+  feriados = arr.map(s => {
+    // Detecta automaticamente o formato
+    if (s.includes('/')) {
+      const [d, m, y] = s.split('/').map(Number);
+      return new Date(y, m - 1, d);
+    } else if (s.includes('-')) {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    } else {
+      return new Date(s);
+    }
+  });
+})
       .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
     function calcular() {
