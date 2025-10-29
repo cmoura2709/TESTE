@@ -1,118 +1,38 @@
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>Data da Ocorrência</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    body {
-      font-family: 'Inter', sans-serif;
-      background-image: url('Fundo_ANAC.jpg');
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-blend-mode: overlay;
-      background-color: rgba(26, 79, 139, 0.6);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      max-width: 450px;
-      width: 100%;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-      animation: fadeIn 0.6s ease-in-out;
-    }
-    h1 {
-      font-size: 26px;
-      text-align: center;
-      margin: 0 0 10px 0;
-      color: #1a1a1a;
-    }
-    h2 {
-      font-size: 16px;
-      text-align: center;
-      margin: 0 0 20px 0;
-      font-weight: normal;
-      color: #1a1a1a;
-    }
-    label {
-      font-weight: 600;
-      color: #333;
-      display: block;
-      margin-top: 10px;
-      margin-bottom: 6px;
-    }
-    input[type="date"],
-    input[type="number"] {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      transition: all 0.2s ease-in-out;
-    }
-    input:focus {
-      border-color: #4a90e2;
-      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-      outline: none;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #4a90e2;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
-      color: white;
-      cursor: pointer;
-      margin-top: 15px;
-      transition: background-color 0.2s ease-in-out, transform 0.1s;
-    }
-    button:hover {
-      background-color: #3a78c2;
-      transform: scale(1.02);
-    }
-    #resultado {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f8faff;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      color: #1a1a1a;
-      border: 1px solid #d6e0ff;
-      opacity: 0;
-      transform: translateY(10px);
-      animation: slideUp 0.4s ease forwards;
-    }
-    strong {
-      color: #4a90e2;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes slideUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    body{font-family:Inter, sans-serif; background-image:url('Fundo_ANAC.jpg'); background-size:contain; background-position:center; background-repeat:no-repeat; background-blend-mode:overlay; background-color:rgba(26,79,139,0.6); margin:0; padding:0; display:flex; justify-content:center; align-items:center; min-height:100vh;}
+    .card{background:rgba(255,255,255,0.95); max-width:450px; width:100%; padding:25px; border-radius:16px; box-shadow:0 8px 25px rgba(0,0,0,0.08); animation:fadeIn .6s ease-in-out;}
+    h1{font-size:26px; text-align:center; margin:0 0 10px 0; color:#111;}
+    h2{font-size:16px; text-align:center; margin:0 0 20px 0; font-weight:normal; color:#111;}
+    label{font-weight:600; color:#333; display:block; margin-top:10px; margin-bottom:6px;}
+    input[type="date"], input[type="number"]{width:100%; padding:10px 12px; border:1px solid #ccc; border-radius:8px; font-size:.95rem;}
+    input:focus{border-color:#4a90e2; box-shadow:0 0 0 3px rgba(74,144,226,.2); outline:none;}
+    button{width:100%; padding:12px; background:#4a90e2; border:none; border-radius:8px; font-size:1rem; font-weight:bold; color:#fff; cursor:pointer; margin-top:15px;}
+    button:hover{background:#3a78c2}
+    #resultado{margin-top:20px; padding:15px; background:#f8faff; border-radius:8px; font-size:.95rem; line-height:1.5; color:#111; border:1px solid #d6e0ff; opacity:0; transform:translateY(10px); animation:slideUp .4s ease forwards;}
+    strong{color:#4a90e2}
+    @keyframes fadeIn{from{opacity:0; transform:scale(.95);} to{opacity:1; transform:scale(1);}}
+    @keyframes slideUp{to{opacity:1; transform:translateY(0);}}
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Data da Ocorrência</h1>
     <h2>(Recusa de Informações)</h2>
+
     <label for="notificacao">Data da Notificação:</label>
     <input type="date" id="notificacao">
+
     <label for="prazo">Prazo (em dias):</label>
     <input type="number" id="prazo" min="1">
+
     <button onclick="calcular()">Calcular</button>
+
     <div id="resultado"></div>
   </div>
 
@@ -123,22 +43,31 @@
       const [y, m, d] = s.split('-').map(Number);
       return new Date(y, m - 1, d);
     };
+
     const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
     const addDays = (d, n) => {
       const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       x.setDate(x.getDate() + n);
       return x;
     };
+
     const sameYMD = (a, b) =>
       a.getFullYear() === b.getFullYear() &&
       a.getMonth() === b.getMonth() &&
       a.getDate() === b.getDate();
+
+    const isWeekend = (d) => {
+      const dow = d.getDay();
+      return dow === 0 || dow === 6;
+    };
+
     const ehDiaUtil = (data) => {
       const d = stripTime(data);
-      const dow = d.getDay();
-      if (dow === 0 || dow === 6) return false;
+      if (isWeekend(d)) return false;
       return !feriados.some(f => sameYMD(f, d));
     };
+
     const proximoDiaUtil = (data) => {
       let d = addDays(data, 1);
       while (!ehDiaUtil(d)) d = addDays(d, 1);
@@ -147,39 +76,62 @@
 
     // Carrega feriados no formato dd/mm/yyyy
     fetch('Feriados.json')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Fetch falhou: ' + r.status);
+        return r.json();
+      })
       .then(arr => {
         feriados = arr.map(s => {
           const [d, m, y] = s.split('/').map(Number);
           return new Date(y, m - 1, d);
         });
+        console.log('Feriados carregados:', feriados.map(f => f.toISOString().slice(0,10)));
       })
-      .catch(err => console.error('Erro ao carregar Feriados.json:', err));
+      .catch(err => {
+        console.error('Erro ao carregar Feriados.json:', err);
+        // opcional: setar feriados = [] para evitar crashes
+        feriados = [];
+      });
 
     function calcular() {
       const notificacaoVal = document.getElementById('notificacao').value;
       const prazo = parseInt(document.getElementById('prazo').value, 10);
       const out = document.getElementById('resultado');
+
       if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
         out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
         out.style.opacity = 1;
         return;
       }
-      const dataNotificacao = fromInputDate(notificacaoVal);
-      const notificacaoEhUtil = ehDiaUtil(dataNotificacao);
 
-      // Início da contagem: se feriado/fds, começa no segundo dia útil, senão no próximo dia útil
-      let inicioContagem = notificacaoEhUtil
-        ? proximoDiaUtil(dataNotificacao)
-        : proximoDiaUtil(proximoDiaUtil(dataNotificacao));
+      const dataNotificacao = fromInputDate(notificacaoVal);
+      const dSem = isWeekend(dataNotificacao);
+      const dUtil = ehDiaUtil(dataNotificacao); // true apenas se dia útil e não feriado
+      const dFeriadoEmDiaUtil = !dUtil && !dSem; // se não é útil e não é fim-de-semana => é feriado em dia útil
+
+      // Regra ajustada:
+      // - se cair em fim-de-semana -> inicio = PRIMEIRO dia útil seguinte
+      // - se cair em feriado (dia útil que é feriado) -> inicio = SEGUNDO dia útil seguinte
+      // - se cair em dia útil normal -> inicio = PRIMEIRO dia útil seguinte
+      let inicioContagem;
+      if (dSem) {
+        inicioContagem = proximoDiaUtil(dataNotificacao); // fim-de-semana -> pega 1º útil
+      } else if (dFeriadoEmDiaUtil) {
+        inicioContagem = proximoDiaUtil(proximoDiaUtil(dataNotificacao)); // feriado em dia útil -> 2º útil
+      } else {
+        // dia útil normal
+        inicioContagem = proximoDiaUtil(dataNotificacao);
+      }
       inicioContagem = stripTime(inicioContagem);
 
-      // Prazo contado em dias corridos
+      // Prazo contado em dias corridos (dias calendário)
       let dataFinal = addDays(inicioContagem, prazo);
-      // Ajusta a data final para o próximo dia útil, se necessário
+
+      // Ajusta data final para o próximo dia útil, se cair em feriado/fds
       if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
       dataFinal = stripTime(dataFinal);
 
+      // Data da ocorrência = dataFinal + 1 dia (sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
       out.innerHTML = `
@@ -190,6 +142,16 @@
       out.style.animation = "none";
       void out.offsetWidth;
       out.style.animation = "slideUp 0.4s ease forwards";
+
+      // Debug (remova se quiser)
+      console.log({
+        notificacao: dataNotificacao.toISOString().slice(0,10),
+        isWeekend: dSem,
+        isHolidayInWeekday: dFeriadoEmDiaUtil,
+        inicioContagem: inicioContagem.toISOString().slice(0,10),
+        dataFinal: dataFinal.toISOString().slice(0,10),
+        dataOcorrencia: dataOcorrencia.toISOString().slice(0,10)
+      });
     }
   </script>
 </body>
