@@ -4,7 +4,6 @@
   <title>Data da Ocorrência</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
     body {
       font-family: 'Inter', sans-serif;
       background-image: url('Fundo_ANAC.jpg');
@@ -20,7 +19,6 @@
       align-items: center;
       min-height: 100vh;
     }
-
     .card {
       background: rgba(255, 255, 255, 0.95);
       max-width: 450px;
@@ -30,14 +28,12 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.08);
       animation: fadeIn 0.6s ease-in-out;
     }
-
     h1 {
       font-size: 26px;
       text-align: center;
       margin: 0 0 10px 0;
       color: #1a1a1a;
     }
-
     h2 {
       font-size: 16px;
       text-align: center;
@@ -45,7 +41,6 @@
       font-weight: normal;
       color: #1a1a1a;
     }
-
     label {
       font-weight: 600;
       color: #333;
@@ -53,7 +48,6 @@
       margin-top: 10px;
       margin-bottom: 6px;
     }
-
     input[type="date"],
     input[type="number"] {
       width: 100%;
@@ -63,13 +57,11 @@
       font-size: 0.95rem;
       transition: all 0.2s ease-in-out;
     }
-
     input:focus {
       border-color: #4a90e2;
       box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
       outline: none;
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -83,12 +75,10 @@
       margin-top: 15px;
       transition: background-color 0.2s ease-in-out, transform 0.1s;
     }
-
     button:hover {
       background-color: #3a78c2;
       transform: scale(1.02);
     }
-
     #resultado {
       margin-top: 20px;
       padding: 15px;
@@ -102,16 +92,13 @@
       transform: translateY(10px);
       animation: slideUp 0.4s ease forwards;
     }
-
     strong {
       color: #4a90e2;
     }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
     }
-
     @keyframes slideUp {
       to { opacity: 1; transform: translateY(0); }
     }
@@ -121,15 +108,11 @@
   <div class="card">
     <h1>Data da Ocorrência</h1>
     <h2>(Recusa de Informações)</h2>
-
     <label for="notificacao">Data da Notificação:</label>
     <input type="date" id="notificacao">
-
     <label for="prazo">Prazo (em dias):</label>
     <input type="number" id="prazo" min="1">
-
     <button onclick="calcular()">Calcular</button>
-
     <div id="resultado"></div>
   </div>
 
@@ -140,34 +123,29 @@
       const [y, m, d] = s.split('-').map(Number);
       return new Date(y, m - 1, d);
     };
-
     const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
     const addDays = (d, n) => {
       const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       x.setDate(x.getDate() + n);
       return x;
     };
-
     const sameYMD = (a, b) =>
       a.getFullYear() === b.getFullYear() &&
       a.getMonth() === b.getMonth() &&
       a.getDate() === b.getDate();
-
     const ehDiaUtil = (data) => {
       const d = stripTime(data);
       const dow = d.getDay();
       if (dow === 0 || dow === 6) return false;
       return !feriados.some(f => sameYMD(f, d));
     };
-
     const proximoDiaUtil = (data) => {
       let d = addDays(data, 1);
       while (!ehDiaUtil(d)) d = addDays(d, 1);
       return d;
     };
 
-    // Carrega os feriados (formato dd/mm/yyyy)
+    // Carrega feriados no formato dd/mm/yyyy
     fetch('Feriados.json')
       .then(r => r.json())
       .then(arr => {
@@ -175,41 +153,33 @@
           const [d, m, y] = s.split('/').map(Number);
           return new Date(y, m - 1, d);
         });
-        console.log('Feriados carregados:', feriados.map(f => f.toLocaleDateString('pt-BR')));
       })
       .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
-    // Função principal corrigida
     function calcular() {
       const notificacaoVal = document.getElementById('notificacao').value;
       const prazo = parseInt(document.getElementById('prazo').value, 10);
       const out = document.getElementById('resultado');
-
       if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
         out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
         out.style.opacity = 1;
         return;
       }
-
       const dataNotificacao = fromInputDate(notificacaoVal);
       const notificacaoEhUtil = ehDiaUtil(dataNotificacao);
 
-      // Início da contagem: depende se notificação foi útil ou não
+      // Início da contagem: se feriado/fds, começa no segundo dia útil, senão no próximo dia útil
       let inicioContagem = notificacaoEhUtil
         ? proximoDiaUtil(dataNotificacao)
         : proximoDiaUtil(proximoDiaUtil(dataNotificacao));
       inicioContagem = stripTime(inicioContagem);
 
-      // Prazo em dias corridos (não úteis)
+      // Prazo contado em dias corridos
       let dataFinal = addDays(inicioContagem, prazo);
-
-      // Ajusta data final para próximo dia útil se cair em feriado/fds
-      if (!ehDiaUtil(dataFinal)) {
-        dataFinal = proximoDiaUtil(dataFinal);
-      }
+      // Ajusta a data final para o próximo dia útil, se necessário
+      if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
       dataFinal = stripTime(dataFinal);
 
-      // Data da ocorrência (dia seguinte, sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
       out.innerHTML = `
@@ -220,9 +190,6 @@
       out.style.animation = "none";
       void out.offsetWidth;
       out.style.animation = "slideUp 0.4s ease forwards";
-
-      // debug opcional
-      console.log({ dataNotificacao, inicioContagem, dataFinal, dataOcorrencia });
     }
   </script>
 </body>
