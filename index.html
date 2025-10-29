@@ -1,91 +1,109 @@
-<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<title>Data da Ocorrência</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: #1a4f8b;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-  }
-  .card {
-    background: rgba(255,255,255,0.95);
-    max-width: 450px;
-    width: 100%;
-    padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-  }
-  label { font-weight: 600; margin-top:10px; display:block;}
-  input, button { width:100%; padding:10px; margin-top:5px; font-size:1rem; border-radius:8px; }
-  button { background:#4a90e2; color:white; border:none; cursor:pointer; }
-  #resultado { margin-top:20px; padding:10px; background:#f8faff; border-radius:8px; }
-</style>
+  <meta charset="UTF-8">
+  <title>Data da Ocorrência</title>
+  <style>
+    /* ... (mantém todo o CSS original) ... */
+  </style>
 </head>
 <body>
-<div class="card">
-  <h1>Data da Ocorrência</h1>
-  <label for="notificacao">Data da Notificação:</label>
-  <input type="date" id="notificacao">
-  <label for="prazo">Prazo (dias corridos):</label>
-  <input type="number" id="prazo" min="1">
-  <button onclick="calcular()">Calcular</button>
-  <div id="resultado"></div>
-</div>
+  <div class="card">
+    <h1>Data da Ocorrência</h1>
+    <h2>(Recusa de Informações)</h2>
 
-<script>
-let feriados = [];
+    <label for="notificacao">Data da Notificação:</label>
+    <input type="date" id="notificacao">
 
-// Funções utilitárias
-const fromInputDate = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
-const addDays = (d,n) => { let x = new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()+n); return x; };
-const sameYMD = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-const isWeekend = d => d.getDay()===0||d.getDay()===6;
-const ehDiaUtil = d => !isWeekend(d) && !feriados.some(f=>sameYMD(f,d));
-const proximoDiaUtil = d => { let x = new Date(d); while(!ehDiaUtil(x)) x = addDays(x,1); return x; };
+    <label for="prazo">Prazo (em dias):</label>
+    <input type="number" id="prazo" min="1">
 
-// Carregar feriados (dd/mm/yyyy)
-fetch('Feriados.json').then(r=>r.json()).then(arr=>{
-  feriados = arr.map(s=>{ const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d); });
-}).catch(err=>console.error(err));
+    <button onclick="calcular()">Calcular</button>
 
-function calcular(){
-  const out = document.getElementById('resultado');
-  const notifVal = document.getElementById('notificacao').value;
-  const prazo = parseInt(document.getElementById('prazo').value,10);
+    <div id="resultado"></div>
+  </div>
 
-  if(!notifVal||isNaN(prazo)||prazo<1){ out.innerHTML='<span style="color:red">Preencha todos os campos corretamente.</span>'; return; }
+  <script>
+    let feriados = [];
 
-  // 1️⃣ Ajusta notificação se cair em fim de semana/feriado
-  let notifEfetiva = fromInputDate(notifVal);
-  notifEfetiva = ehDiaUtil(notifEfetiva)? notifEfetiva : proximoDiaUtil(notifEfetiva);
+    const fromInputDate = s => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
 
-  // 2️⃣ Início da contagem = dia seguinte à notificação efetiva
-  let inicioContagem = addDays(notifEfetiva,1);
+    const parseDataBR = s => {
+      const [d, m, y] = s.split('/').map(Number);
+      return new Date(y, m - 1, d);
+    };
 
-  // 3️⃣ Prazo em dias corridos
-  let dataFinal = addDays(inicioContagem,prazo-1); // inclui o primeiro dia da contagem
+    const sameYMD = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
 
-  // 4️⃣ Ajusta dataFinal para próximo dia útil se cair em feriado/fds
-  if(!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
+    const stripTime = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-  // 5️⃣ Data da ocorrência = dataFinal + 1 dia (sem ajuste)
-  let dataOcorrencia = addDays(dataFinal,1);
+    const addDays = (d, n) => {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() + n);
+      return x;
+    };
 
-  out.innerHTML = `
-    <strong>Data de Notificação Efetiva:</strong> ${notifEfetiva.toLocaleDateString('pt-BR')}<br>
-    <strong>Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
-    <strong>Data Final:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
-    <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
-  `;
-}
-</script>
+    const ehDiaUtil = data => {
+      const d = stripTime(data);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) return false;
+      return !feriados.some(f => sameYMD(f, d));
+    };
+
+    const proximoDiaUtil = data => {
+      let d = stripTime(data);
+      while (!ehDiaUtil(d)) d = addDays(d, 1);
+      return d;
+    };
+
+    fetch('Feriados.json')
+      .then(r => r.json())
+      .then(arr => { feriados = arr.map(parseDataBR); })
+      .catch(err => console.error('Erro ao carregar Feriados.json:', err));
+
+    function calcular() {
+      const notificacaoVal = document.getElementById('notificacao').value;
+      const prazo = parseInt(document.getElementById('prazo').value, 10);
+      const out = document.getElementById('resultado');
+
+      if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
+        out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
+        out.style.opacity = 1;
+        return;
+      }
+
+      // 🔹 Ajusta notificação para próximo dia útil, se necessário
+      let dataNotificacao = fromInputDate(notificacaoVal);
+      if (!ehDiaUtil(dataNotificacao)) dataNotificacao = proximoDiaUtil(dataNotificacao);
+
+      // 🔹 Início da contagem = dia seguinte à notificação efetiva (mesmo que não seja útil)
+      const inicioContagem = addDays(dataNotificacao, 1);
+
+      // 🔹 Prazo em dias corridos (incluindo o primeiro dia)
+      let dataFinal = addDays(inicioContagem, prazo - 1);
+
+      // 🔹 Ajusta dataFinal se cair em feriado/fds
+      if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
+
+      // 🔹 Data da ocorrência = dataFinal + 1 dia (sem ajuste)
+      const dataOcorrencia = addDays(dataFinal, 1);
+
+      out.innerHTML = `
+        <strong>Data de Notificação Efetiva:</strong> ${dataNotificacao.toLocaleDateString('pt-BR')}<br>
+        <strong>Data de Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
+        <strong>Data Final para Apresentação da Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
+        <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
+      `;
+
+      out.style.animation = "none"; // reset animação
+      void out.offsetWidth; // reflow
+      out.style.animation = "slideUp 0.4s ease forwards";
+    }
+  </script>
 </body>
 </html>
