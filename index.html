@@ -141,11 +141,6 @@
       return new Date(y, m - 1, d);
     };
 
-    const sameYMD = (a, b) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-
     const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     const addDays = (d, n) => {
@@ -153,6 +148,11 @@
       x.setDate(x.getDate() + n);
       return x;
     };
+
+    const sameYMD = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
 
     const ehDiaUtil = (data) => {
       const d = stripTime(data);
@@ -179,6 +179,7 @@
       })
       .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
+    // Função principal corrigida
     function calcular() {
       const notificacaoVal = document.getElementById('notificacao').value;
       const prazo = parseInt(document.getElementById('prazo').value, 10);
@@ -193,22 +194,22 @@
       const dataNotificacao = fromInputDate(notificacaoVal);
       const notificacaoEhUtil = ehDiaUtil(dataNotificacao);
 
-      // Regra: se notificação for em feriado/fds, inicia no segundo dia útil
+      // Início da contagem: depende se notificação foi útil ou não
       let inicioContagem = notificacaoEhUtil
         ? proximoDiaUtil(dataNotificacao)
         : proximoDiaUtil(proximoDiaUtil(dataNotificacao));
+      inicioContagem = stripTime(inicioContagem);
 
-      // Conta dia a dia apenas dias úteis
-      let diasContados = 0;
-      let dataAtual = new Date(inicioContagem);
-      while (diasContados < prazo) {
-        if (ehDiaUtil(dataAtual)) diasContados++;
-        if (diasContados < prazo) dataAtual.setDate(dataAtual.getDate() + 1);
+      // Prazo em dias corridos (não úteis)
+      let dataFinal = addDays(inicioContagem, prazo);
+
+      // Ajusta data final para próximo dia útil se cair em feriado/fds
+      if (!ehDiaUtil(dataFinal)) {
+        dataFinal = proximoDiaUtil(dataFinal);
       }
+      dataFinal = stripTime(dataFinal);
 
-      let dataFinal = stripTime(dataAtual);
-      if (!ehDiaUtil(dataFinal)) dataFinal = proximoDiaUtil(dataFinal);
-
+      // Data da ocorrência (dia seguinte, sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
       out.innerHTML = `
@@ -219,6 +220,9 @@
       out.style.animation = "none";
       void out.offsetWidth;
       out.style.animation = "slideUp 0.4s ease forwards";
+
+      // debug opcional
+      console.log({ dataNotificacao, inicioContagem, dataFinal, dataOcorrencia });
     }
   </script>
 </body>
