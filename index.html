@@ -1,163 +1,235 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cálculo de Prazos</title>
+  <title>Data da Ocorrência</title>
   <style>
+    /* Fonte moderna */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f9fafb;
+
+      /* Fundo com imagem do repositório */
+      background-image: url('Fundo_ANAC.jpg'); /* ou .jpg se for esse formato */
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      background-blend-mode: overlay;
+      background-color: rgba(26, 79, 139, 0.6);
+
+      margin: 0;
+      padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       min-height: 100vh;
-      margin: 0;
-      padding-top: 40px;
     }
 
-    .container {
-      background: white;
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      max-width: 450px;
+      width: 100%;
+      padding: 25px;
       border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 32px;
-      width: 380px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      animation: fadeIn 0.6s ease-in-out;
     }
 
     h1 {
-      font-size: 20px;
-      margin-bottom: 24px;
+      font-size: 26px;
       text-align: center;
-      color: #111827;
+      margin: 0 0 10px 0;
+      color: #1a1a1a;
+    }
+
+    h2 {
+      font-size: 16px;
+      text-align: center;
+      margin: 0 0 20px 0;
+      font-weight: normal;
+      color: #1a1a1a;
     }
 
     label {
       font-weight: 600;
-      color: #374151;
+      color: #333;
       display: block;
+      margin-top: 10px;
       margin-bottom: 6px;
     }
 
-    input {
+    input[type="date"],
+    input[type="number"] {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    input:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+      outline: none;
     }
 
     button {
       width: 100%;
-      background-color: #2563eb;
-      color: white;
+      padding: 12px;
+      background-color: #4a90e2;
       border: none;
-      padding: 10px;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
       cursor: pointer;
-      transition: background 0.2s;
+      margin-top: 15px;
+      transition: background-color 0.2s ease-in-out, transform 0.1s;
     }
 
     button:hover {
-      background-color: #1d4ed8;
+      background-color: #3a78c2;
+      transform: scale(1.02);
     }
 
-    .resultado {
-      margin-top: 24px;
-      background-color: #f3f4f6;
-      padding: 16px;
-      border-radius: 12px;
-      font-size: 14px;
+    #resultado {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8faff;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #1a1a1a;
+      border: 1px solid #d6e0ff;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: slideUp 0.4s ease forwards;
     }
 
-    .resultado p {
-      margin: 8px 0;
-      line-height: 1.4;
+    strong {
+      color: #4a90e2;
+    }
+
+    /* Animações */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Cálculo de Prazos</h1>
+  <div class="card">
+    <h1>Data da Ocorrência</h1>
+    <h2>(Recusa de Informações)</h2>
 
-    <label for="dataNotificacao">Data da Notificação:</label>
-    <input type="date" id="dataNotificacao">
+    <label for="notificacao">Data da Notificação:</label>
+    <input type="date" id="notificacao">
 
-    <label for="prazo">Prazo (dias corridos):</label>
-    <input type="number" id="prazo" placeholder="Ex: 10">
+    <label for="prazo">Prazo (em dias):</label>
+    <input type="number" id="prazo" min="1">
 
-    <button onclick="calcularPrazo()">Calcular</button>
+    <button onclick="calcular()">Calcular</button>
 
-    <div class="resultado" id="resultado"></div>
+    <div id="resultado"></div>
   </div>
 
   <script>
-    const feriados = [
-      "2025-01-01", // Confraternização Universal
-      "2025-02-25", // Carnaval
-      "2025-04-18", // Sexta-feira Santa
-      "2025-04-21", // Tiradentes
-      "2025-05-01", // Dia do Trabalho
-      "2025-09-07", // Independência
-      "2025-10-12", // Nossa Senhora Aparecida
-      "2025-11-02", // Finados
-      "2025-11-15", // Proclamação da República
-      "2025-12-25"  // Natal
-    ];
+    let feriados = [];
 
-    // Funções auxiliares
-    const toDate = (str) => new Date(str + "T00:00:00");
-    const formatDate = (d) => d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
-    const addDays = (d, n) => new Date(d.getTime() + n * 86400000);
+    const fromInputDate = (s) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
 
-    const ehFeriado = (data) => feriados.includes(data.toISOString().split("T")[0]);
-    const ehFimDeSemana = (data) => data.getDay() === 0 || data.getDay() === 6;
-    const ehDiaUtil = (data) => !ehFeriado(data) && !ehFimDeSemana(data);
+    const parseDataBR = (s) => {
+      const [d, m, y] = s.split('/').map(Number);
+      return new Date(y, m - 1, d);
+    };
 
-    // Retorna o próximo dia útil a partir de 'data' inclusive
-    const proximoDiaUtilInclusivo = (data) => {
+    const sameYMD = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+
+    const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    const addDays = (d, n) => {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() + n);
+      return x;
+    };
+
+    const ehDiaUtil = (data) => {
+      const d = stripTime(data);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) return false;
+      return !feriados.some(f => sameYMD(f, d));
+    };
+
+    const proximoDiaUtil = (data) => {
+      let d = addDays(data, 1);
+      while (!ehDiaUtil(d)) d = addDays(d, 1);
+      return d;
+    };
+
+    const ajustarParaDiaUtil = (data) => {
       let d = new Date(data);
       while (!ehDiaUtil(d)) d = addDays(d, 1);
       return d;
     };
 
-    // Cálculo principal
-    function calcularPrazo() {
-      const dataNotificacaoInput = document.getElementById("dataNotificacao").value;
-      const prazo = parseInt(document.getElementById("prazo").value);
-      const resultado = document.getElementById("resultado");
+    fetch('Feriados.json')
+      .then(r => r.json())
+      .then(arr => { feriados = arr.map(parseDataBR); })
+      .catch(err => console.error('Erro ao carregar Feriados.json:', err));
 
-      if (!dataNotificacaoInput || isNaN(prazo)) {
-        resultado.innerHTML = "<p style='color:red'>Preencha todos os campos.</p>";
+    function calcular() {
+      const notificacaoVal = document.getElementById('notificacao').value;
+      const prazo = parseInt(document.getElementById('prazo').value, 10);
+      const out = document.getElementById('resultado');
+
+      if (!notificacaoVal || isNaN(prazo) || prazo < 1) {
+        out.innerHTML = `<span style="color:red;">Preencha todos os campos corretamente.</span>`;
+        out.style.opacity = 1;
         return;
       }
 
-      // 1️⃣ Notificação efetiva: próximo dia útil se cair em fim de semana/feriado
-      let notificacaoEfetiva = proximoDiaUtilInclusivo(toDate(dataNotificacaoInput));
+      const dataNotificacao = fromInputDate(notificacaoVal);
+      
+      // 🔹 1. Ajusta notificação se cair em fim de semana ou feriado
+      const notificacaoEfetiva = ajustarParaDiaUtil(dataNotificacao);
 
-      // 2️⃣ Início da contagem: primeiro dia útil subsequente à notificação efetiva
-      let inicioContagem = proximoDiaUtilInclusivo(addDays(notificacaoEfetiva, 1));
+      // 🔹 2. Início da contagem: primeiro dia útil subsequente à notificação efetiva
+      let inicioContagem = proximoDiaUtil(notificacaoEfetiva);
+      inicioContagem = ajustarParaDiaUtil(inicioContagem);
 
-      // 3️⃣ Contar o prazo em dias corridos (inclui o início)
+      // 🔹 3. Contagem em dias corridos (iniciando no dia de início)
       let dataFinal = addDays(inicioContagem, prazo - 1);
 
-      // 4️⃣ Ajustar data final se cair em fim de semana/feriado
+      // 🔹 4. Ajusta data final se cair em fim de semana ou feriado
       if (!ehDiaUtil(dataFinal)) {
-        dataFinal = proximoDiaUtilInclusivo(dataFinal);
+        dataFinal = ajustarParaDiaUtil(dataFinal);
       }
 
-      // 5️⃣ Data da ocorrência = data final + 1 (sem ajuste)
+      // 🔹 5. Data da ocorrência = data final + 1 (sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
-      // Exibição dos resultados
-      resultado.innerHTML = `
-        <p><strong>Notificação efetiva:</strong> ${formatDate(notificacaoEfetiva)}</p>
-        <p><strong>Início da contagem:</strong> ${formatDate(inicioContagem)}</p>
-        <p><strong>Data final (ajustada):</strong> ${formatDate(dataFinal)}</p>
-        <p><strong>Data da ocorrência:</strong> ${formatDate(dataOcorrencia)}</p>
+      out.innerHTML = `
+        <strong>Data da Notificação Efetiva:</strong> ${notificacaoEfetiva.toLocaleDateString('pt-BR')}<br>
+        <strong>Data de Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
+        <strong>Data Final para Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
+        <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
       `;
+
+      out.style.animation = "none";
+      void out.offsetWidth;
+      out.style.animation = "slideUp 0.4s ease forwards";
     }
   </script>
 </body>
