@@ -3,21 +3,16 @@
   <meta charset="UTF-8">
   <title>Data da Ocorrência</title>
   <style>
-    /* Fonte moderna */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
     body {
       font-family: 'Inter', sans-serif;
-
-      /* Fundo com imagem do repositório */
-      background-image: url('Fundo_ANAC.jpg'); /* ou .jpg se for esse formato */
+      background-image: url('Fundo_ANAC.jpg');
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
-
       background-blend-mode: overlay;
       background-color: rgba(26, 79, 139, 0.6);
-
       margin: 0;
       padding: 0;
       display: flex;
@@ -59,8 +54,7 @@
       margin-bottom: 6px;
     }
 
-    input[type="date"],
-    input[type="number"] {
+    input[type="date"], input[type="number"] {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid #ccc;
@@ -108,11 +102,8 @@
       animation: slideUp 0.4s ease forwards;
     }
 
-    strong {
-      color: #4a90e2;
-    }
+    strong { color: #4a90e2; }
 
-    /* Animações */
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
@@ -172,14 +163,8 @@
       return !feriados.some(f => sameYMD(f, d));
     };
 
-    const proximoDiaUtil = (data) => {
+    const ajustarParaProximoUtil = (data) => {
       let d = addDays(data, 1);
-      while (!ehDiaUtil(d)) d = addDays(d, 1);
-      return d;
-    };
-
-    const ajustarParaDiaUtil = (data) => {
-      let d = new Date(data);
       while (!ehDiaUtil(d)) d = addDays(d, 1);
       return d;
     };
@@ -201,28 +186,23 @@
       }
 
       const dataNotificacao = fromInputDate(notificacaoVal);
-      
-      // 🔹 1. Ajusta notificação se cair em fim de semana ou feriado
-      const notificacaoEfetiva = ajustarParaDiaUtil(dataNotificacao);
 
-      // 🔹 2. Início da contagem: primeiro dia útil subsequente à notificação efetiva
-      let inicioContagem = proximoDiaUtil(notificacaoEfetiva);
-      inicioContagem = ajustarParaDiaUtil(inicioContagem);
+      // Início da contagem = próximo dia útil após a notificação
+      let inicioContagem = ajustarParaProximoUtil(dataNotificacao);
 
-      // 🔹 3. Contagem em dias corridos (iniciando no dia de início)
+      // Conta dias corridos
       let dataFinal = addDays(inicioContagem, prazo - 1);
 
-      // 🔹 4. Ajusta data final se cair em fim de semana ou feriado
-      if (!ehDiaUtil(dataFinal)) {
-        dataFinal = ajustarParaDiaUtil(dataFinal);
+      // Ajusta final para dia útil
+      while (!ehDiaUtil(dataFinal)) {
+        dataFinal = addDays(dataFinal, 1);
       }
 
-      // 🔹 5. Data da ocorrência = data final + 1 (sem ajuste)
       const dataOcorrencia = addDays(dataFinal, 1);
 
       out.innerHTML = `
-        <strong>Data da Notificação Efetiva:</strong> ${notificacaoEfetiva.toLocaleDateString('pt-BR')}<br>
-        <strong>Data de Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
+        <strong>Data da Notificação:</strong> ${dataNotificacao.toLocaleDateString('pt-BR')}<br>
+        <strong>Início da Contagem:</strong> ${inicioContagem.toLocaleDateString('pt-BR')}<br>
         <strong>Data Final para Resposta:</strong> ${dataFinal.toLocaleDateString('pt-BR')}<br>
         <strong>Data da Ocorrência:</strong> ${dataOcorrencia.toLocaleDateString('pt-BR')}
       `;
