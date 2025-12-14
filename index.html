@@ -68,8 +68,20 @@
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
-      line-height: normal;
+      
+      box-sizing: border-box;
+      height: 44px;
       padding: 10px 12px;
+      line-height: 24px;
+      
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      height: 18px;
+      width: 18px;
     }
 
     input:focus {
