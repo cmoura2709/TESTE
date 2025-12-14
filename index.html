@@ -83,6 +83,30 @@
       height: 18px;
       width: 18px;
     }
+   
+    input[type="number"] {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      
+      box-sizing: border-box;
+      height: 44px;
+      padding: 10px 12px;
+      line-height: 24px;
+      
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+    }
+    
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
 
     input:focus {
       border-color: #4a90e2;
